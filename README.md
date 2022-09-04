@@ -3,7 +3,7 @@
 ### Deployment information
 
 - The project is automatically deployed to Deno Deploy to allow for testing the API without any cloning required.
-    - Please find the deployment at [nsgnn-denotodo.deno.dev](nsgnn-denotodo.deno.dev).
+    - Please find the deployment at [nsgnn-denotodo.deno.dev](https://nsgnn-denotodo.deno.dev).
 - The testing for this was manually done with Postman and documented example runs, eleven in total, in postman found [here](https://documenter.getpostman.com/view/20706352/VUxXLjLB).
 
 ### Notes on possible future work
