@@ -1,26 +1,80 @@
 import { Handlers, Status } from "$fresh/server.ts";
-import * as postgres from "https://deno.land/x/postgres@v0.14.0/mod.ts";
-
-const databaseUrl = Deno.env.get("DATABASE_URL");
-
-const pgPool = new postgres.Pool(databaseUrl, 5, true);
+import { pgPool, PoolClient } from "../../database.ts";
+import { TodoList, TodoListItem, TodoListInfo } from "../../models/todo.d.ts"
 
 /**
- * The exported handlers will control any request sent to the `/api/todo` endpoint. Any method that is not implemented will return a 405 response.
+ * 
+ * @param connection connection to database to use
+ * @param name The name of the list that we want to retrieve
+ * @returns The requested todo list or undefined.
  */
-export const handler: Handlers = {
+async function getTodoListInfoByName(connection: PoolClient, name: string): Promise<TodoList | undefined> {
+  const todoListQueryResults = await connection.queryObject<TodoListInfo> `
+      select * from "TodoLists" where name = ${name}
+    `;
+  // First (and only possible) result or undefined.
+  return todoListQueryResults.rows?.[0] as TodoList | undefined;
+}
+
+/**
+ * 
+ * @param connection connection to database to use
+ * @param ListID The list we want to retrieve items for.
+ * @returns The requested todo list items or an empty array.
+ */
+async function getTodoListItemsByListID(connection: PoolClient, ListID: number): Promise<Array<TodoListItem>> {
+  const items = await connection.queryObject<TodoListItem>`
+    select ID, text from "TodoListItems" where list = ${ListID}
+  `;
+  return items.rows;
+}
 
   /**
    * GET request handler for the `/api/todo` endpoint. This will return a todo list based on the name provided in the request.
    * @param req The request sent to the server by the client. This is required to contain the query param: `name`.
    * @returns Response will be the todo list requested found based on the `Name` field. Failure to provide required fields will result in a 400 response.
    */
-  GET(req) {
-    console.log(req.url);
-    return new Response("", {
-      status: Status.NotImplemented
+async function getTodo(req: Request): Promise<Response> {
+  let responseBody: string | null = null;
+  const queryParams = (new URL(req.url)).searchParams;
+  // prevent escape characters by getting the raw string.
+  const name = String.raw`${queryParams.get("name")}`; 
+  
+  if(name === null) {
+    // User failed to provide a name to find a todo list for.
+    return new Response(null, {
+      status: Status.BadRequest,
+      statusText: "Query parameter 'name' is required."
     });
-  },
+  }
+
+  // Connect to the database.
+  const connection = await pgPool.connect();
+  try {
+    const reqTodoList = await getTodoListInfoByName(connection, name);
+    if(!reqTodoList) {
+      // We did not find a todo list by that name.
+      return new Response(null, {
+        status: Status.NoContent,
+        statusText: "No Content."
+      });
+    }
+    reqTodoList.items = await getTodoListItemsByListID(connection, reqTodoList.ListID); 
+    responseBody = JSON.stringify(reqTodoList, null, 4);
+  } finally {
+    connection.release();
+  }
+  
+  return new Response(responseBody, {
+    status: Status.OK
+  });
+}
+
+/**
+ * The exported handlers will control any request sent to the `/api/todo` endpoint. Any method that is not implemented will return a 405 response.
+ */
+export const handler: Handlers = {
+  GET: getTodo ,
 
   /**
    * POST request handler for the `/api/todo` endpoint. This will create a new todo list and save it to the database.
