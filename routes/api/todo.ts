@@ -1,4 +1,9 @@
 import { Handlers, Status } from "$fresh/server.ts";
+import * as postgres from "https://deno.land/x/postgres@v0.14.0/mod.ts";
+
+const databaseUrl = Deno.env.get("DATABASE_URL");
+
+const pgPool = new postgres.Pool(databaseUrl, 5, true);
 
 /**
  * The exported handlers will control any request sent to the `/api/todo` endpoint. Any method that is not implemented will return a 405 response.
