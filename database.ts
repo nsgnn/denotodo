@@ -70,3 +70,49 @@ export async function getTodoListItemsByListID(
 `;
   return items.rows;
 }
+
+/**
+ * @param connection connection to database to use
+ * @param ListID The list we want to add to.
+ * @param todoItem The item we want to add.
+ * @returns The requested todo list items or an empty array.
+ */
+export async function createTodoListItem(
+  connection: PoolClient,
+  ListID: number,
+  todoItem: string,
+): Promise<boolean> {
+  try {
+    await connection.queryObject<TodoListInfo>`
+        INSERT INTO "TodoListItems" (text, list) VALUES (${todoItem}, ${ListID})
+                `;
+  } catch (_) {
+    // On any error, return false.
+    return false;
+  }
+  // Creation success.
+  return true;
+}
+
+/**
+ * @param connection connection to database to use
+ * @param ListID The list we want to delete from.
+ * @param todoItem The item we want to delete.
+ * @returns The requested todo list items or an empty array.
+ */
+export async function deleteTodoListItem(
+  connection: PoolClient,
+  ListID: number,
+  todoItem: string,
+): Promise<boolean> {
+  try {
+    await connection.queryObject<TodoListInfo>`
+          DELETE FROM "TodoListItems" WHERE text=${todoItem} AND list=${ListID}
+                  `;
+  } catch (_) {
+    // On any error, return false.
+    return false;
+  }
+  // Creation success.
+  return true;
+}

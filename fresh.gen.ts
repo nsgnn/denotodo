@@ -3,10 +3,12 @@
 // This file is automatically updated during development when running `dev.ts`.
 
 import * as $0 from "./routes/api/todo.ts";
+import * as $1 from "./routes/api/todo/item.ts";
 
 const manifest = {
   routes: {
     "./routes/api/todo.ts": $0,
+    "./routes/api/todo/item.ts": $1,
   },
   islands: {},
   baseUrl: import.meta.url,

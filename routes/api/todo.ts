@@ -1,4 +1,3 @@
-// deno-lint-ignore-file require-await
 import { Handlers, Status } from "$fresh/server.ts";
 import {
   createTodoList,
@@ -102,22 +101,9 @@ async function putTodo(req: Request): Promise<Response> {
 }
 
 /**
- * DELETE request handler for the `/api/todo` endpoint. This will delete an existing todo list from the database.
- * @param req The request sent to the server by the client. This is required to contain the value: `Name`.
- * @returns Response will indicate the success of the todo list item deleting. Failure to provide required fields will result in a 400 response.
- */
-async function deleteTodo(req: Request): Promise<Response> {
-  console.log(req.body);
-  return new Response("", {
-    status: Status.NotImplemented,
-  });
-}
-
-/**
  * The exported handlers will control any request sent to the `/api/todo` endpoint. Any method that is not implemented will return a 405 response.
  */
 export const handler: Handlers = {
   GET: getTodo,
   PUT: putTodo,
-  DELETE: deleteTodo,
 };
